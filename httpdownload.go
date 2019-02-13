@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -97,10 +98,15 @@ func testhttp() {
 	// ...
 	//req.Header.Add("Range", `bytes=0-499,601-999`)
 	resp, err := httpClient.Do(req)
+	fmt.Println("")
 	fmt.Println(resp)
+	fmt.Println("")
 	fmt.Println(resp.Header)
+	fmt.Println("")
 	fmt.Println(resp.Status)
+	fmt.Println("")
 	fmt.Println("contentlength:", resp.ContentLength)
+	fmt.Println("")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -278,16 +284,19 @@ func (d *Downloader) Start() {
 		for {
 			count, err := resp.Body.Read(buff)
 
-			if err != nil {
-				fmt.Println("Range", `bytes=`+String(d.StartByte)+`-`+String(d.EndByte)+" read error ", err.Error())
-				break
-			} else if count == 0 {
-				fmt.Println("Range", `bytes=`+String(d.StartByte)+`-`+String(d.EndByte)+" read end ")
-			} else {
+			if count > 0 {
 				sum += count
+				f.Write(buff[:count])
+
 				//per := fmt.Sprintf("%.2f", float64(sum)/float64(d.EndByte-d.StartByte))
 				//fmt.Println("Range index ", d.Index, ` bytes=`+String(d.StartByte)+`-`+String(d.EndByte)+" download percent: ", per, "% "+String(sum)+"/"+String(d.EndByte-d.StartByte), " count ", count)
-				f.Write(buff[:count])
+			}
+
+			if err == io.EOF {
+				fmt.Println("Range index ", d.Index, ` bytes=`+String(d.StartByte)+`-`+String(d.EndByte)+" download end")
+				break
+			} else if err != nil {
+				fmt.Println("Range index ", d.Index, ` bytes=`+String(d.StartByte)+`-`+String(d.EndByte)+" read error ", err.Error())
 			}
 		}
 	}
