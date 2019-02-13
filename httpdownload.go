@@ -147,7 +147,8 @@ func testhttp() {
 	}
 
 	for i, d := range downloaders {
-		df, err := os.OpenFile(outputdir+fpath+String(d.Index), os.O_RDWR, os.ModePerm) //可读写，追加的方式打开（或创建文件）
+		fname := outputdir + fpath + String(d.Index)
+		df, err := os.OpenFile(fname, os.O_RDWR, os.ModePerm) //可读写，追加的方式打开（或创建文件）
 		if err != nil {
 			fmt.Println("open file index ", i, " error:", err.Error())
 			break
@@ -164,6 +165,9 @@ func testhttp() {
 
 			f.Write(buff[:c])
 		}
+
+		df.Close()
+		os.Remove(fname)
 	}
 
 	usetime := time.Now().Unix() - starttime
